@@ -4,14 +4,14 @@ Capture cam;
 
 PImage targetImage;
 ArrayList<Painter> painters;
-int currentFit;
-int lastFit;
+long currentFit;
 int piclength;
 int generation = 0;
+color startCol = color(random(256), random(256), random(256));
 
 void setup() {
   size(640, 480);
-  background(0);
+  background(startCol);
 
   String[] cameras = Capture.list();
   if (cameras == null) {
@@ -43,60 +43,52 @@ void setup() {
 
 
   painters = new ArrayList<Painter>();
-  painters.add(new Painter());
-  currentFit = 2147483647;
-  calculateFitness();
+  currentFit = calculateFitness();
   println(currentFit);
-  println(lastFit);
-  painters.add(new Painter());
-  calculateFitness();
-  println(currentFit);
-  println(lastFit);
 }
 
 void draw() {
-  calculateFitness();
   evolve();
-  show();
-  println("Generation:\t" + generation + "\tCurrentFit\t" + currentFit + "\tlastFit\t" + lastFit);
+  //println("Generation:\t" + generation + "\tCurrentFit\t" + currentFit);
 }
 
-void calculateFitness() {
-  lastFit = currentFit;
-  currentFit = 0;
+long calculateFitness() {
+  long newFit = 0;
   loadPixels();
   targetImage.loadPixels();
 
   for (int i = 0; i < piclength; i++) {
     color currentColor = pixels[i];
     color targetColor = targetImage.pixels[i];
-    currentFit += abs(dist(red(targetColor), green(targetColor), blue(targetColor), red(currentColor), green(currentColor), blue(currentColor)));
+    newFit += (dist(red(targetColor), green(targetColor), blue(targetColor), red(currentColor), green(currentColor), blue(currentColor)));
   }
+  return newFit;
 }
 
 void evolve() {
-  if (currentFit < lastFit) {
-    painters.add(new Painter());
-  } else {
-    painters.set(painters.size() - 1, new Painter());
-    currentFit = lastFit;
+  show();
+  Painter candidatePainter = new Painter();
+  candidatePainter.show();
+  long newFit = calculateFitness();
+  if(newFit < currentFit){
+    painters.add(candidatePainter);
+    currentFit = newFit;
   }
   generation++;
 }
 
 void show() {
+  background(startCol);
   for (Painter p : painters) {
     p.show();
   };
 }
 
 void reset() {
-  background(255);
+  background(startCol);
   painters = new ArrayList<Painter>();
-  painters.add(new Painter());
-  generation = 0;
-  lastFit = 0;
-  currentFit = 0;
+  currentFit = calculateFitness();
+
 }
 
 void keyPressed() {
