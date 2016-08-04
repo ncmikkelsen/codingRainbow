@@ -8,7 +8,14 @@ long currentFit;
 int piclength;
 int generation = 0;
 color startCol = color(random(256), random(256), random(256));
-
+boolean captureGenerations = true;
+boolean captureCircles = true; 
+//Grabs a screenshot every captureRate frame. 
+int generationCaptureRate = 500;
+//Grabs a screen every time the number of circles grouws with circleCaptureRate amount.
+int circleCaptureRate = 100;
+String folderName;     
+String directory = "C:/Users/N/Desktop/";
 void setup() {
   size(640, 480);
   background(startCol);
@@ -34,10 +41,11 @@ void setup() {
     // Start capturing the images from the camera
     cam.start();
   }
-  //delay(10000);
-  //cam.read();
-  //targetImage = cam;
-  targetImage = loadImage("hacker.jpg");
+  delay(10000);
+  cam.read();
+  targetImage = cam;
+  folderName = "" + year() + "_" + month() + "_" + day() + "_" + hour() + "_" + minute() + "_" + second() + "/";
+  targetImage.save(directory + folderName + "targetImage.png");
   piclength = 640 * 480;
 
 
@@ -49,14 +57,13 @@ void setup() {
 
 void draw() {
   evolve();
-  //println("Generation:\t" + generation + "\tCurrentFit\t" + currentFit);
+  println("Generation:\t" + generation + "\t CurrentFit:\t" + currentFit + "\t Circles:\t" + painters.size());
 }
 
 long calculateFitness() {
   long newFit = 0;
   loadPixels();
   targetImage.loadPixels();
-
   for (int i = 0; i < piclength; i++) {
     color currentColor = pixels[i];
     color targetColor = targetImage.pixels[i];
@@ -67,10 +74,18 @@ long calculateFitness() {
 
 void evolve() {
   show();
+  if (captureGenerations && generation % generationCaptureRate == 0) {
+    saveFrame(directory + folderName + "Generations/" + generation + ".png");
+  }
+  if (captureCircles && painters.size() % circleCaptureRate == 0) {
+    save(directory + folderName + "Circles/" + painters.size() + ".png");
+  }
+
+
   Painter candidatePainter = new Painter();
   candidatePainter.show();
   long newFit = calculateFitness();
-  if(newFit < currentFit){
+  if (newFit < currentFit) {
     painters.add(candidatePainter);
     currentFit = newFit;
   }
@@ -85,17 +100,21 @@ void show() {
 }
 
 void reset() {
+  println("Resetting with a new picture!");
+
   background(startCol);
+  generation = 0;
+  cam.read();
+  targetImage = cam;
+  folderName = "" + year() + "_" + month() + "_" + day() + "_" + hour() + "_" + minute() + "_" + second() + "/";
+  targetImage.save(directory + folderName + "targetImage.png");
+
   painters = new ArrayList<Painter>();
   currentFit = calculateFitness();
-
 }
 
 void keyPressed() {
   if (key == ' ') {
-    println("Nyt billede");
-    cam.read();
-    targetImage = cam;
     reset();
   }
 }
