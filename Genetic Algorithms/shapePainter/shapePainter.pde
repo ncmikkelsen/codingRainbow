@@ -41,8 +41,11 @@ void setup() {
     // Start capturing the images from the camera
     cam.start();
   }
-  delay(10000);
-  cam.read();
+  //delay(10000);
+
+  while (!cam.available()) {
+    cam.read();
+  }
   targetImage = cam;
   folderName = "" + year() + "_" + month() + "_" + day() + "_" + hour() + "_" + minute() + "_" + second() + "/";
   targetImage.save(directory + folderName + "targetImage.png");
