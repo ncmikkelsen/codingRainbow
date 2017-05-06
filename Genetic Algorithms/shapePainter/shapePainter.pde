@@ -3,28 +3,30 @@ import processing.video.*;
 Capture cam;
 
 PImage targetImage;
+PImage backupImage;
 ArrayList<Painter> painters;
 long currentFit;
 int piclength;
 int generation = 0;
 color startCol = color(random(256), random(256), random(256));
 boolean captureGenerations = true;
-boolean captureCircles = true; 
-//Grabs a screenshot every captureRate frame. 
+boolean captureCircles = true;
+//Grabs a screenshot every captureRate frame.
 int generationCaptureRate = 500;
 //Grabs a screen every time the number of circles grouws with circleCaptureRate amount.
 int circleCaptureRate = 100;
-String folderName;     
+String folderName;
 String directory = "C:/Users/N/Desktop/";
 void setup() {
   size(640, 480);
   background(startCol);
 
+
   String[] cameras = Capture.list();
   if (cameras == null) {
     println("Failed to retrieve the list of available cameras, will try the default...");
     cam = new Capture(this, 640, 480);
-  } 
+  }
   if (cameras.length == 0) {
     println("There are no cameras available for capture.");
     exit();
@@ -54,6 +56,8 @@ void setup() {
 
 
   painters = new ArrayList<Painter>();
+  backupImage = createImage(width, height, ARGB);
+  updateBackup();
   currentFit = calculateFitness();
   println(currentFit);
 }
@@ -92,11 +96,26 @@ void evolve() {
     painters.add(candidatePainter);
     currentFit = newFit;
   }
+
+  if (painters.size() >= 100) {
+    updateBackup();
+  }
   generation++;
+}
+
+void updateBackup() {
+  loadPixels();
+  backupImage.loadPixels();
+  for (int i = 0; i < piclength; i++) {
+    backupImage.pixels[i] = pixels[i];
+  }
+  backupImage.updatePixels();
+  painters.clear();
 }
 
 void show() {
   background(startCol);
+  image(backupImage, 0, 0, width, height);
   for (Painter p : painters) {
     p.show();
   };
@@ -106,13 +125,14 @@ void reset() {
   println("Resetting with a new picture!");
 
   background(startCol);
+  updateBackup();
   generation = 0;
   cam.read();
   targetImage = cam;
   folderName = "" + year() + "_" + month() + "_" + day() + "_" + hour() + "_" + minute() + "_" + second() + "/";
   targetImage.save(directory + folderName + "targetImage.png");
 
-  painters = new ArrayList<Painter>();
+  painters.clear();
   currentFit = calculateFitness();
 }
 
