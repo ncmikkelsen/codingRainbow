@@ -5,6 +5,7 @@ Capture cam;
 PImage targetImage;
 PImage backupImage;
 ArrayList<Painter> painters;
+int painterPopulation;
 long currentFit;
 int piclength;
 int generation = 0;
@@ -56,6 +57,7 @@ void setup() {
 
 
   painters = new ArrayList<Painter>();
+  painterPopulation = 0;
   backupImage = createImage(width, height, ARGB);
   updateBackup();
   currentFit = calculateFitness();
@@ -64,7 +66,7 @@ void setup() {
 
 void draw() {
   evolve();
-  println("Generation:\t" + generation + "\t CurrentFit:\t" + currentFit + "\t Circles:\t" + painters.size());
+  println("Generation:\t" + generation + "\t CurrentFit:\t" + currentFit + "\t Circles:\t" + painterPopulation);
 }
 
 long calculateFitness() {
@@ -84,8 +86,8 @@ void evolve() {
   if (captureGenerations && generation % generationCaptureRate == 0) {
     saveFrame(directory + folderName + "Generations/" + generation + ".png");
   }
-  if (captureCircles && painters.size() % circleCaptureRate == 0) {
-    save(directory + folderName + "Circles/" + painters.size() + ".png");
+  if (captureCircles && painterPopulation % circleCaptureRate == 0) {
+    save(directory + folderName + "Circles/" + painterPopulation + ".png");
   }
 
 
@@ -95,6 +97,7 @@ void evolve() {
   if (newFit < currentFit) {
     painters.add(candidatePainter);
     currentFit = newFit;
+    painterPopulation++;
   }
 
   if (painters.size() >= 100) {
